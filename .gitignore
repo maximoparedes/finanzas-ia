@@ -39,3 +39,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# scripts/mp-sync (Playwright session + logs, never committed)
+scripts/mp-sync/.auth/
+scripts/mp-sync/logs/
+scripts/mp-sync/node_modules/
+scripts/mp-sync/.env
