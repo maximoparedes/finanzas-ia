@@ -1,36 +1,59 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# finanzas-ia
 
-## Getting Started
+App personal de finanzas con categorización automática por IA. Cargás o importás tus gastos, la IA los categoriza, y el dashboard te avisa si vas a pasarte del presupuesto antes de fin de mes.
 
-First, run the development server:
+Producción: **https://finanzas-ia-seven.vercel.app**
+
+## Stack
+
+- **Next.js 16** (App Router, Turbopack)
+- **Supabase** (Postgres) vía `service_role`, sin policies de `anon`/`authenticated`
+- **NextAuth (Auth.js v5)** con Google como único provider
+- **Claude (Anthropic)**: `claude-haiku-4-5` para categorizar gastos importados, `claude-sonnet-5` para el asistente de chat
+- Tailwind CSS v4, Recharts, react-hook-form + zod
+
+## Funcionalidad
+
+- **Transacciones**: alta manual, edición, borrado, filtro por mes.
+- **Import de Mercado Pago**: subís el export (CSV/XLSX), se parsean las filas, se evita duplicados por hash, y cada transacción se categoriza automáticamente con IA (marca las de baja confianza para revisar después con el filtro "Revisar" en la pantalla de Transacciones).
+- **Presupuestos**: uno general por mes y, opcionalmente, uno por categoría.
+- **Dashboard**: gastado del mes, presupuesto, proyección de fin de mes (extrapolación lineal según los días transcurridos) con semáforo verde/ámbar/rojo, gráfico de gasto acumulado vs. ritmo de presupuesto, y desglose por categoría.
+- **Asistente**: chat con contexto de tus gastos y presupuesto del mes actual, respuestas en streaming.
+
+## Desarrollo local
 
 ```bash
+npm install
+cp .env.local.example .env.local   # completar con tus credenciales (ver abajo)
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Abrí [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Variables de entorno
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Ver `.env.local.example` para la lista completa. Resumen de dónde sale cada una:
 
-## Learn More
+| Variable | De dónde sale |
+|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` | Proyecto de Supabase → Project Settings → API |
+| `AUTH_SECRET` | `npx auth secret` |
+| `NEXTAUTH_URL` | `http://localhost:3000` en local; la URL de producción en Vercel |
+| `AUTH_GOOGLE_ID` / `AUTH_GOOGLE_SECRET` | Google Cloud Console → un cliente OAuth de tipo "Aplicación web" |
+| `ANTHROPIC_API_KEY` | [console.anthropic.com](https://console.anthropic.com) |
 
-To learn more about Next.js, take a look at the following resources:
+### Base de datos
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Correr `supabase/schema.sql` en el SQL Editor del proyecto de Supabase para crear las tablas (`usuarios`, `transactions`, `monthly_budgets`, `budget_alerts_log`, `chat_messages`).
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Google OAuth
 
-## Deploy on Vercel
+El client ID necesita, como redirect URI autorizado, `<tu-dominio>/api/auth/callback/google` (tanto el de `localhost:3000` para desarrollo como el de producción). Mientras el consent screen esté en modo "Prueba", solo los usuarios agregados como "usuarios de prueba" en Google Auth Platform pueden loguearse.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Deploy
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Conectado a Vercel con Git integration — cada push a `master` deploya a producción. Las env vars están cargadas en Vercel (producción y preview); si cambian, actualizarlas ahí y volver a deployar.
+
+## Pendiente
+
+- Alertas de presupuesto (por email, no Telegram/WhatsApp) cuando se acerca o supera el límite.

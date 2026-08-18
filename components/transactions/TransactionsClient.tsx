@@ -1,14 +1,14 @@
 'use client';
 
 import { useState } from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import { MonthSelector } from '@/components/layout/MonthSelector';
 import { TransactionCard } from '@/components/transactions/TransactionCard';
 import { TransactionForm } from '@/components/transactions/TransactionForm';
 import { DeleteConfirm } from '@/components/transactions/DeleteConfirm';
 import { ImportUpload } from '@/components/transactions/ImportUpload';
-import { formatCurrency } from '@/lib/utils';
+import { cn, formatCurrency } from '@/lib/utils';
 import type { Transaction } from '@/types';
 
 interface Props {
@@ -23,13 +23,25 @@ export function TransactionsClient({ initialMonth, initialTransactions }: Props)
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Transaction | undefined>(undefined);
   const [deleting, setDeleting] = useState<Transaction | undefined>(undefined);
+  const [reviewOnly, setReviewOnly] = useState(false);
+  const [reviewCount, setReviewCount] = useState(
+    initialTransactions.filter((t) => t.category_source === 'ai_low_confidence').length
+  );
 
-  const fetchTransactions = async (targetMonth: string) => {
+  const fetchTransactions = async (targetMonth: string, onlyReview = reviewOnly) => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/transactions?mes=${targetMonth}`);
+      const params = new URLSearchParams({ mes: targetMonth });
+      if (onlyReview) params.set('review', 'true');
+      const res = await fetch(`/api/transactions?${params}`);
       const data = await res.json();
-      setTransactions(data.transactions ?? []);
+      const fetched: Transaction[] = data.transactions ?? [];
+      setTransactions(fetched);
+      if (onlyReview) {
+        setReviewCount(fetched.length);
+      } else {
+        setReviewCount(fetched.filter((t) => t.category_source === 'ai_low_confidence').length);
+      }
     } catch {
       toast.error('No se pudieron cargar las transacciones');
     } finally {
@@ -40,6 +52,12 @@ export function TransactionsClient({ initialMonth, initialTransactions }: Props)
   const handleMonthChange = (newMonth: string) => {
     setMonth(newMonth);
     fetchTransactions(newMonth);
+  };
+
+  const toggleReviewOnly = () => {
+    const next = !reviewOnly;
+    setReviewOnly(next);
+    fetchTransactions(month, next);
   };
 
   const total = transactions.reduce((sum, t) => sum + t.amount, 0);
@@ -96,6 +114,20 @@ export function TransactionsClient({ initialMonth, initialTransactions }: Props)
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           <MonthSelector month={month} onChange={handleMonthChange} />
+          {(reviewCount > 0 || reviewOnly) && (
+            <button
+              onClick={toggleReviewOnly}
+              className={cn(
+                'flex items-center gap-1.5 py-2.5 px-3 rounded-xl text-sm font-medium transition-colors',
+                reviewOnly
+                  ? 'bg-amber-500 text-white hover:bg-amber-600'
+                  : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20'
+              )}
+            >
+              <Sparkles size={14} />
+              Revisar ({reviewCount})
+            </button>
+          )}
           <ImportUpload onImported={() => fetchTransactions(month)} />
           <button
             onClick={() => {
@@ -112,7 +144,10 @@ export function TransactionsClient({ initialMonth, initialTransactions }: Props)
 
       <div className="flex flex-col gap-2">
         {loading && <p className="text-sm text-slate-400">Cargando...</p>}
-        {!loading && transactions.length === 0 && (
+        {!loading && transactions.length === 0 && reviewOnly && (
+          <p className="text-sm text-slate-400">No hay transacciones para revisar. 🎉</p>
+        )}
+        {!loading && transactions.length === 0 && !reviewOnly && (
           <p className="text-sm text-slate-400">No hay transacciones este mes.</p>
         )}
         {transactions.map((t) => (
