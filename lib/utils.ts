@@ -26,6 +26,15 @@ export function getCurrentMonth(): string {
   return format(new Date(), 'yyyy-MM');
 }
 
+export function daysInMonth(month: string): number {
+  const [year, m] = month.split('-').map(Number);
+  return new Date(year, m, 0).getDate();
+}
+
+export function dayOfMonth(dateStr: string): number {
+  return parseInt(dateStr.split('-')[2], 10);
+}
+
 export function capitalize(str: string): string {
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
