@@ -43,22 +43,31 @@ create table if not exists monthly_budgets (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references usuarios(id) on delete cascade,
   month text not null,
-  category text,
+  category text,             -- null = presupuesto general
   amount numeric(14,2) not null,
-  created_at timestamptz not null default now(),
-  unique (user_id, month, category)
+  created_at timestamptz not null default now()
 );
+-- Postgres no considera iguales dos NULL a los fines de un unique constraint normal,
+-- así que un solo "unique (user_id, month, category)" no evita dos presupuestos
+-- generales (category null) para el mismo mes. Se separan en dos índices parciales.
+create unique index if not exists monthly_budgets_general_unique
+  on monthly_budgets (user_id, month) where category is null;
+create unique index if not exists monthly_budgets_category_unique
+  on monthly_budgets (user_id, month, category) where category is not null;
 
 create table if not exists budget_alerts_log (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references usuarios(id) on delete cascade,
   month text not null,
-  category text,
+  category text,             -- null = alerta de scope general
   threshold_pct int not null,
   sent_at timestamptz not null default now(),
-  channel text not null default 'telegram',
-  unique (user_id, month, category, threshold_pct)
+  channel text not null default 'telegram'
 );
+create unique index if not exists budget_alerts_log_general_unique
+  on budget_alerts_log (user_id, month, threshold_pct) where category is null;
+create unique index if not exists budget_alerts_log_category_unique
+  on budget_alerts_log (user_id, month, category, threshold_pct) where category is not null;
 
 create table if not exists chat_messages (
   id uuid primary key default gen_random_uuid(),
