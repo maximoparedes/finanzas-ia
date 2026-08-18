@@ -19,6 +19,7 @@ Producción: **https://finanzas-ia-seven.vercel.app**
 - **Presupuestos**: uno general por mes y, opcionalmente, uno por categoría.
 - **Dashboard**: gastado del mes, presupuesto, proyección de fin de mes (extrapolación lineal según los días transcurridos) con semáforo verde/ámbar/rojo, gráfico de gasto acumulado vs. ritmo de presupuesto, y desglose por categoría.
 - **Asistente**: chat con contexto de tus gastos y presupuesto del mes actual, respuestas en streaming.
+- **Alertas de presupuesto por email**: un cron diario (`/api/cron/budget-alerts`, Vercel Cron) revisa el presupuesto general y los de cada categoría; si el gasto llega al 80% o al 100%, manda un email (Resend) con el detalle. No reenvía el mismo umbral dos veces (queda registrado en `budget_alerts_log`).
 
 ## Desarrollo local
 
@@ -41,6 +42,8 @@ Ver `.env.local.example` para la lista completa. Resumen de dónde sale cada una
 | `NEXTAUTH_URL` | `http://localhost:3000` en local; la URL de producción en Vercel |
 | `AUTH_GOOGLE_ID` / `AUTH_GOOGLE_SECRET` | Google Cloud Console → un cliente OAuth de tipo "Aplicación web" |
 | `ANTHROPIC_API_KEY` | [console.anthropic.com](https://console.anthropic.com) |
+| `RESEND_API_KEY` | [resend.com](https://resend.com) → API Keys. Sin verificar un dominio propio, el sandbox (`onboarding@resend.dev`) solo envía al email con el que te registraste en Resend |
+| `CRON_SECRET` | Cualquier string random largo. Vercel manda `Authorization: Bearer $CRON_SECRET` automáticamente en las invocaciones de cron cuando esta env var está seteada en el proyecto |
 
 ### Base de datos
 
@@ -52,8 +55,4 @@ El client ID necesita, como redirect URI autorizado, `<tu-dominio>/api/auth/call
 
 ## Deploy
 
-Conectado a Vercel con Git integration — cada push a `master` deploya a producción. Las env vars están cargadas en Vercel (producción y preview); si cambian, actualizarlas ahí y volver a deployar.
-
-## Pendiente
-
-- Alertas de presupuesto (por email, no Telegram/WhatsApp) cuando se acerca o supera el límite.
+Conectado a Vercel con Git integration — cada push a `master` deploya a producción. Las env vars están cargadas en Vercel (producción y preview); si cambian, actualizarlas ahí y volver a deployar. El cron de alertas está definido en `vercel.json` (corre una vez por día).
