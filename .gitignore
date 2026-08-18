@@ -45,3 +45,6 @@ scripts/mp-sync/.auth/
 scripts/mp-sync/logs/
 scripts/mp-sync/node_modules/
 scripts/mp-sync/.env
+
+.vercel
+.env*
