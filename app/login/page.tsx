@@ -3,23 +3,40 @@
 import { Suspense } from "react";
 import { signIn } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
+import { motion } from "motion/react";
+import { Button } from "@/components/ui/button";
 
 function LoginForm() {
   const searchParams = useSearchParams();
   const from = searchParams.get("from") ?? "/dashboard";
 
   return (
-    <main className="flex flex-1 items-center justify-center px-6">
-      <div className="w-full max-w-sm space-y-4 rounded-lg border border-neutral-200 p-6 dark:border-neutral-800">
-        <div className="space-y-1 text-center">
-          <h1 className="text-xl font-semibold">finanzas-ia</h1>
-          <p className="text-sm text-neutral-500">Iniciá sesión para continuar</p>
+    <main className="relative flex flex-1 items-center justify-center px-6 overflow-hidden">
+      <div
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background:
+            "radial-gradient(600px circle at 50% 35%, rgb(139 92 246 / 0.18), transparent 70%)",
+        }}
+      />
+
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+        className="relative w-full max-w-sm space-y-6 rounded-2xl border border-edge bg-surface/80 backdrop-blur-xl p-8 shadow-elevated"
+      >
+        <div className="space-y-2 text-center">
+          <div className="mx-auto mb-2 h-9 w-9 rounded-xl bg-accent shadow-glow" />
+          <h1 className="text-lg font-semibold text-fg">finanzas-ia</h1>
+          <p className="text-sm text-fg-subtle">Iniciá sesión para continuar</p>
         </div>
 
-        <button
+        <Button
           type="button"
+          variant="secondary"
           onClick={() => signIn("google", { callbackUrl: from })}
-          className="flex w-full items-center justify-center gap-2 rounded-md border border-neutral-300 px-4 py-2 text-sm font-medium hover:bg-neutral-50 dark:border-neutral-700 dark:hover:bg-neutral-900"
+          className="w-full"
         >
           <svg className="h-4 w-4" viewBox="0 0 48 48" aria-hidden="true">
             <path
@@ -40,8 +57,8 @@ function LoginForm() {
             />
           </svg>
           Continuar con Google
-        </button>
-      </div>
+        </Button>
+      </motion.div>
     </main>
   );
 }

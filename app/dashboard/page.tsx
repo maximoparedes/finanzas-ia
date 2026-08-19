@@ -1,5 +1,5 @@
 import { auth } from "@/auth";
-import { Nav } from "@/components/layout/Nav";
+import { AppShell } from "@/components/layout/AppShell";
 import { DashboardClient } from "@/components/dashboard/DashboardClient";
 import { getTransactionsForMonth } from "@/lib/queries/transactions";
 import { getBudgetsForMonth } from "@/lib/queries/budgets";
@@ -15,14 +15,13 @@ export default async function DashboardPage() {
     : [[], []];
 
   return (
-    <>
-      <Nav />
+    <AppShell>
       <DashboardClient
         nombre={session?.user?.name ?? session?.user?.email ?? ""}
         initialMonth={month}
         initialTransactions={transactions}
         initialBudgets={budgets}
       />
-    </>
+    </AppShell>
   );
 }

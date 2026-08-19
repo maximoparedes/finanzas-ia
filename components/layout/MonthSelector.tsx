@@ -28,21 +28,21 @@ export function MonthSelector({ month, onChange }: Props) {
   const isCurrentMonth = month === getCurrentMonth();
 
   return (
-    <div className="flex items-center justify-between bg-slate-100 dark:bg-slate-800 rounded-lg px-2 py-1.5">
+    <div className="flex items-center gap-1 bg-surface border border-edge rounded-full px-1.5 py-1.5">
       <button
         onClick={goToPrev}
-        className="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 transition-colors"
+        className="p-1.5 rounded-full hover:bg-surface-raised text-fg-muted transition-colors"
         aria-label="Mes anterior"
       >
         <ChevronLeft size={14} />
       </button>
-      <span className="text-xs font-medium text-slate-700 dark:text-slate-300 select-none capitalize px-1">
+      <span className="text-xs font-medium text-fg select-none capitalize px-2 min-w-[104px] text-center">
         {formatMonthLabel(month)}
       </span>
       <button
         onClick={goToNext}
         disabled={isCurrentMonth}
-        className="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+        className="p-1.5 rounded-full hover:bg-surface-raised text-fg-muted transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
         aria-label="Mes siguiente"
       >
         <ChevronRight size={14} />

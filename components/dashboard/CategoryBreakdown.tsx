@@ -1,5 +1,9 @@
+import { motion } from 'motion/react';
 import { CATEGORY_COLORS, CATEGORY_ICONS } from '@/lib/types';
 import { formatCurrency } from '@/lib/utils';
+import { Card } from '@/components/ui/card';
+import { CategoryChip } from '@/components/ui/badge';
+import { staggerContainer, listItem } from '@/lib/motion';
 import type { Transaction } from '@/types';
 
 interface Props {
@@ -20,38 +24,44 @@ export function CategoryBreakdown({ transactions }: Props) {
 
   if (rows.length === 0) {
     return (
-      <div className="rounded-xl border border-slate-200 dark:border-slate-800 p-5">
-        <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">Por categoría</h2>
-        <p className="text-sm text-slate-400">No hay gastos este mes.</p>
-      </div>
+      <Card className="p-5">
+        <h2 className="text-sm font-semibold text-fg mb-1">Por categoría</h2>
+        <p className="text-sm text-fg-subtle">No hay gastos este mes.</p>
+      </Card>
     );
   }
 
   return (
-    <div className="rounded-xl border border-slate-200 dark:border-slate-800 p-5">
-      <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-4">Por categoría</h2>
-      <div className="flex flex-col gap-3">
-        {rows.map(({ category, amount }) => (
-          <div key={category} className="flex items-center gap-3">
-            <span className="w-6 text-center text-base shrink-0" aria-hidden>
-              {CATEGORY_ICONS[category as keyof typeof CATEGORY_ICONS]}
-            </span>
-            <span className="w-28 text-sm text-slate-600 dark:text-slate-400 shrink-0 truncate">{category}</span>
-            <div className="flex-1 h-2 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
-              <div
-                className="h-full rounded-full"
-                style={{
-                  width: `${max > 0 ? (amount / max) * 100 : 0}%`,
-                  backgroundColor: CATEGORY_COLORS[category as keyof typeof CATEGORY_COLORS],
-                }}
-              />
-            </div>
-            <span className="w-24 text-right text-sm font-medium text-slate-700 dark:text-slate-300 tabular-nums shrink-0">
-              {formatCurrency(amount)}
-            </span>
-          </div>
-        ))}
-      </div>
-    </div>
+    <Card className="p-5">
+      <h2 className="text-sm font-semibold text-fg mb-4">Por categoría</h2>
+      <motion.div variants={staggerContainer} initial="hidden" animate="show" className="flex flex-col gap-3">
+        {rows.map(({ category, amount }) => {
+          const color = CATEGORY_COLORS[category as keyof typeof CATEGORY_COLORS];
+          return (
+            <motion.div variants={listItem} key={category} className="flex items-center gap-3">
+              <div className="w-32 shrink-0">
+                <CategoryChip
+                  label={category}
+                  icon={CATEGORY_ICONS[category as keyof typeof CATEGORY_ICONS]}
+                  color={color}
+                />
+              </div>
+              <div className="flex-1 h-2 rounded-full bg-surface-raised overflow-hidden">
+                <motion.div
+                  className="h-full rounded-full"
+                  style={{ backgroundColor: color }}
+                  initial={{ width: 0 }}
+                  animate={{ width: `${max > 0 ? (amount / max) * 100 : 0}%` }}
+                  transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                />
+              </div>
+              <span className="w-24 text-right text-sm font-medium text-fg tabular-nums shrink-0">
+                {formatCurrency(amount)}
+              </span>
+            </motion.div>
+          );
+        })}
+      </motion.div>
+    </Card>
   );
 }

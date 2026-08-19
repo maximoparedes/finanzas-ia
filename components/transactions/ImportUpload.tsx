@@ -3,6 +3,7 @@
 import { useRef, useState } from 'react';
 import { Upload, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
 
 interface Props {
   onImported: () => void;
@@ -52,15 +53,10 @@ export function ImportUpload({ onImported }: Props) {
           if (file) handleFile(file);
         }}
       />
-      <button
-        type="button"
-        onClick={() => inputRef.current?.click()}
-        disabled={loading}
-        className="flex items-center gap-2 py-2.5 px-4 rounded-xl text-sm font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors disabled:opacity-60"
-      >
+      <Button type="button" variant="secondary" onClick={() => inputRef.current?.click()} disabled={loading}>
         {loading ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
         Importar Excel/CSV de Mercado Pago
-      </button>
+      </Button>
     </div>
   );
 }

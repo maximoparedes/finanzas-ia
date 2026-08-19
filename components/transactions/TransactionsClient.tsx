@@ -1,13 +1,17 @@
 'use client';
 
 import { useState } from 'react';
-import { Plus, Sparkles } from 'lucide-react';
+import { Plus, Sparkles, PartyPopper, Inbox } from 'lucide-react';
 import { toast } from 'sonner';
+import { motion } from 'motion/react';
 import { MonthSelector } from '@/components/layout/MonthSelector';
 import { TransactionCard } from '@/components/transactions/TransactionCard';
 import { TransactionForm } from '@/components/transactions/TransactionForm';
 import { DeleteConfirm } from '@/components/transactions/DeleteConfirm';
 import { ImportUpload } from '@/components/transactions/ImportUpload';
+import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
+import { staggerContainer, listItem } from '@/lib/motion';
 import { cn, formatCurrency } from '@/lib/utils';
 import type { Transaction } from '@/types';
 
@@ -107,60 +111,73 @@ export function TransactionsClient({ initialMonth, initialTransactions }: Props)
     <div className="flex flex-1 flex-col gap-6 p-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-xl font-semibold text-slate-900 dark:text-slate-100">Transacciones</h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400">
-            Total del mes: <span className="font-semibold">{formatCurrency(total)}</span>
+          <h1 className="text-xl font-semibold text-fg">Transacciones</h1>
+          <p className="text-sm text-fg-muted">
+            Total del mes: <span className="font-semibold text-fg">{formatCurrency(total)}</span>
           </p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           <MonthSelector month={month} onChange={handleMonthChange} />
           {(reviewCount > 0 || reviewOnly) && (
-            <button
+            <Button
+              variant={reviewOnly ? 'primary' : 'secondary'}
+              size="md"
               onClick={toggleReviewOnly}
-              className={cn(
-                'flex items-center gap-1.5 py-2.5 px-3 rounded-xl text-sm font-medium transition-colors',
-                reviewOnly
-                  ? 'bg-amber-500 text-white hover:bg-amber-600'
-                  : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20'
-              )}
+              className={cn(!reviewOnly && 'bg-warning/10 text-warning border-transparent hover:bg-warning/20', reviewOnly && 'bg-warning hover:bg-warning/90')}
             >
               <Sparkles size={14} />
               Revisar ({reviewCount})
-            </button>
+            </Button>
           )}
           <ImportUpload onImported={() => fetchTransactions(month)} />
-          <button
+          <Button
             onClick={() => {
               setEditing(undefined);
               setFormOpen(true);
             }}
-            className="flex items-center gap-2 py-2.5 px-4 rounded-xl text-sm font-semibold bg-violet-500 hover:bg-violet-600 text-white transition-colors"
           >
             <Plus size={14} />
             Nueva transacción
-          </button>
+          </Button>
         </div>
       </div>
 
       <div className="flex flex-col gap-2">
-        {loading && <p className="text-sm text-slate-400">Cargando...</p>}
+        {loading && (
+          <>
+            {Array.from({ length: 5 }).map((_, i) => (
+              <Skeleton key={i} className="h-[70px] w-full" />
+            ))}
+          </>
+        )}
         {!loading && transactions.length === 0 && reviewOnly && (
-          <p className="text-sm text-slate-400">No hay transacciones para revisar. 🎉</p>
+          <div className="flex flex-col items-center gap-2 py-16 text-fg-subtle">
+            <PartyPopper size={28} />
+            <p className="text-sm">No hay transacciones para revisar.</p>
+          </div>
         )}
         {!loading && transactions.length === 0 && !reviewOnly && (
-          <p className="text-sm text-slate-400">No hay transacciones este mes.</p>
+          <div className="flex flex-col items-center gap-2 py-16 text-fg-subtle">
+            <Inbox size={28} />
+            <p className="text-sm">No hay transacciones este mes.</p>
+          </div>
         )}
-        {transactions.map((t) => (
-          <TransactionCard
-            key={t.id}
-            transaction={t}
-            onEdit={(tx) => {
-              setEditing(tx);
-              setFormOpen(true);
-            }}
-            onDelete={setDeleting}
-          />
-        ))}
+        {!loading && transactions.length > 0 && (
+          <motion.div variants={staggerContainer} initial="hidden" animate="show" className="flex flex-col gap-2">
+            {transactions.map((t) => (
+              <motion.div variants={listItem} key={t.id}>
+                <TransactionCard
+                  transaction={t}
+                  onEdit={(tx) => {
+                    setEditing(tx);
+                    setFormOpen(true);
+                  }}
+                  onDelete={setDeleting}
+                />
+              </motion.div>
+            ))}
+          </motion.div>
+        )}
       </div>
 
       {formOpen && (

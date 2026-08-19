@@ -2,7 +2,9 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { Send, Sparkles } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 import type { ChatMessage } from '@/types';
 
 interface Props {
@@ -76,34 +78,58 @@ export function ChatClient({ initialMessages }: Props) {
   };
 
   return (
-    <div className="flex flex-1 flex-col p-6 gap-4 max-w-3xl w-full mx-auto">
-      <h1 className="text-xl font-semibold text-slate-900 dark:text-slate-100">Asistente</h1>
+    <div className="flex flex-1 flex-col p-6 gap-4 max-w-3xl w-full mx-auto min-h-0">
+      <h1 className="text-xl font-semibold text-fg">Asistente</h1>
 
       <div className="flex-1 flex flex-col gap-3 overflow-y-auto min-h-0">
         {messages.length === 0 && (
-          <div className="flex flex-col items-center justify-center gap-2 flex-1 text-center text-slate-400">
-            <Sparkles size={24} aria-hidden />
-            <p className="text-sm">Preguntame sobre tus gastos, tu presupuesto o pedime consejos.</p>
+          <div className="flex flex-col items-center justify-center gap-3 flex-1 text-center text-fg-subtle">
+            <div className="p-3 rounded-2xl bg-accent/10">
+              <Sparkles size={22} className="text-accent" aria-hidden />
+            </div>
+            <p className="text-sm max-w-xs">Preguntame sobre tus gastos, tu presupuesto o pedime consejos.</p>
           </div>
         )}
-        {messages.map((m) => (
-          <div key={m.id} className={cn('flex', m.role === 'user' ? 'justify-end' : 'justify-start')}>
-            <div
-              className={cn(
-                'max-w-[85%] rounded-2xl px-4 py-2.5 text-sm whitespace-pre-wrap',
-                m.role === 'user'
-                  ? 'bg-violet-500 text-white'
-                  : 'bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200'
-              )}
-            >
-              {m.content || (sending && m.role === 'assistant' ? '…' : '')}
-            </div>
-          </div>
-        ))}
+        <AnimatePresence initial={false}>
+          {messages.map((m, i) => {
+            const isLast = i === messages.length - 1;
+            const isStreaming = isLast && sending && m.role === 'assistant';
+            return (
+              <motion.div
+                key={m.id}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.25 }}
+                className={cn('flex items-end gap-2', m.role === 'user' ? 'justify-end' : 'justify-start')}
+              >
+                {m.role === 'assistant' && (
+                  <div className="h-6 w-6 shrink-0 rounded-full bg-accent/15 text-accent flex items-center justify-center">
+                    <Sparkles size={12} />
+                  </div>
+                )}
+                <div
+                  className={cn(
+                    'max-w-[80%] rounded-2xl px-4 py-2.5 text-sm whitespace-pre-wrap leading-relaxed',
+                    m.role === 'user' ? 'bg-accent text-white' : 'bg-surface border border-edge text-fg',
+                  )}
+                >
+                  {m.content}
+                  {isStreaming && <span className="inline-block w-1.5 h-3.5 bg-accent/70 ml-0.5 -mb-0.5 animate-pulse" />}
+                </div>
+              </motion.div>
+            );
+          })}
+        </AnimatePresence>
         <div ref={bottomRef} />
       </div>
 
-      <div className="flex items-center gap-2">
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          handleSend();
+        }}
+        className="flex items-center gap-2"
+      >
         <input
           type="text"
           value={input}
@@ -116,17 +142,12 @@ export function ChatClient({ initialMessages }: Props) {
           }}
           placeholder="Escribí tu pregunta..."
           disabled={sending}
-          className="flex-1 px-4 py-2.5 rounded-xl text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-violet-500/40 focus:border-violet-500/50 transition-all disabled:opacity-60"
+          className="flex-1 px-4 py-2.5 rounded-xl text-sm bg-surface-raised border border-edge text-fg focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent/50 transition-all disabled:opacity-60"
         />
-        <button
-          onClick={handleSend}
-          disabled={sending || !input.trim()}
-          className="p-2.5 rounded-xl bg-violet-500 hover:bg-violet-600 disabled:opacity-40 disabled:hover:bg-violet-500 text-white transition-colors"
-          aria-label="Enviar"
-        >
+        <Button type="submit" size="icon" disabled={sending || !input.trim()} aria-label="Enviar">
           <Send size={16} />
-        </button>
-      </div>
+        </Button>
+      </form>
     </div>
   );
 }
